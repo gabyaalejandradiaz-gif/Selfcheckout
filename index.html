@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self-Checkout - Super Despensa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+
+        /* LAYOUT PRINCIPAL */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .left-side {
+            flex: 1;
+            background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)),
+                        url('data:image/svg+xml,%3Csvg width="800" height="900" xmlns="http://www.w3.org/2000/svg"%3E%3Crect fill="%2352796F" width="800" height="900"/%3E%3C/svg%3E');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Imagen de fondo específica para la pantalla de bienvenida */
+        #screen-welcome .left-side {
+            background-image: linear-gradient(rgba(0,0,0,0.28), rgba(0,0,0,0.28)), url('https://images.pexels.com/photos/2733918/pexels-photo-2733918.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* Imagen de fondo para la pantalla de formulario (segunda pantalla) */
+        #screen-form .left-side {
+            background-image: linear-gradient(rgba(0,0,0,0.28), rgba(0,0,0,0.28)), url('https://images.pexels.com/photos/2733918/pexels-photo-2733918.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .right-side {
+            flex: 1;
+            background: linear-gradient(180deg, #6B7FED 0%, #7B68EE 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        /* PANTALLA DE BIENVENIDA */
+        .welcome-content {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 16px;
+            line-height: 1.1;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 50px;
+        }
+
+        .option-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .option-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .option-image {
+            width: 100%;
+            height: 180px;
+            background: #F0F4F8;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .option-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .option-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2D3748;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 520px;
+            width: 90%;
+            position: relative;
+            animation: slideUp 0.3s ease;
+            text-align: center;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #A0AEC0;
+            line-height: 1;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+        }
+
+        .modal-close:hover {
+            color: #4A5568;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2D3748;
+            margin-bottom: 20px;
+        }
+
+        .modal-text {
+            font-size: 1.05rem;
+            color: #4A5568;
+            line-height: 1.6;
+        }
+
+        /* FORMULARIO */
+        .form-container {
+            background: white;
+            border-radius: 24px;
+            padding: 48px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2D3748;
+            margin-bottom: 12px;
+        }
+
+        .form-subtitle {
+            font-size: 0.95rem;
+            color: #718096;
+            line-height: 1.5;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #4A5568;
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1rem;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #6B7FED;
+            box-shadow: 0 0 0 3px rgba(107, 127, 237, 0.1);
+        }
+
+        .input-field::placeholder {
+            color: #A0AEC0;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #B8E986 0%, #7BC84A 100%);
+            color: #2D3748;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(123, 200, 74, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #B8E986 0%, #7BC84A 100%);
+            color: #2D3748;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(123, 200, 74, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #FC8181 0%, #F56565 100%);
+            color: white;
+            margin-top: 12px;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 101, 101, 0.3);
+        }
+
+        /* CHECKOUT */
+        .checkout-layout {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            background: white;
+        }
+
+        .checkout-left, .checkout-right {
+            flex: 1;
+            padding: 50px;
+            overflow-y: auto;
+        }
+
+        .checkout-left {
+            background: #F7FAFC;
+            border-right: 1px solid #E2E8F0;
+        }
+
+        .section-heading {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2D3748;
+            margin-bottom: 24px;
+        }
+
+        .product-code-input {
+            width: calc(100% - 120px);
+            padding: 16px 20px;
+            font-size: 1.1rem;
+            border: 2px solid #CBD5E0;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            background: white;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .add-btn {
+            display: inline-block;
+            width: 96px;
+            padding: 14px 10px;
+            margin-left: 12px;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            vertical-align: middle;
+            background: linear-gradient(135deg, #B8E986 0%, #7BC84A 100%);
+            color: #2D3748;
+        }
+
+        .cart-box {
+            background: #E6F3FF;
+            border-radius: 20px;
+            padding: 32px;
+            margin-top: 12px;
+        }
+
+        .cart-heading {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #2D3748;
+            margin-bottom: 24px;
+        }
+
+        .cart-item {
+            background: white;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-name {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #2D3748;
+        }
+
+        .item-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .item-price {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2D3748;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: #B8E986;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .delete-btn:hover {
+            color: #7BC84A;
+        }
+
+        .summary-box {
+            background: #E6F3FF;
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            font-size: 1.05rem;
+            color: #2D3748;
+        }
+
+        .summary-line.total {
+            font-size: 1.3rem;
+            font-weight: 700;
+            padding-top: 20px;
+            border-top: 2px solid #CBD5E0;
+            margin-top: 8px;
+        }
+
+        .payment-box {
+            background: #E6F3FF;
+            border-radius: 20px;
+            padding: 32px;
+        }
+
+        .payment-heading {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #2D3748;
+            margin-bottom: 24px;
+        }
+
+        /* ICONOS SVG */
+        .modal-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 28px;
+        }
+
+        /* OCULTAR PANTALLAS */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* ANIMACIONES */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- PANTALLA 1: BIENVENIDA -->
+    <div id="screen-welcome" class="screen active">
+        <div class="app-container">
+            <div class="left-side"></div>
+            <div class="right-side">
+                <div class="welcome-content">
+                    <h1 class="welcome-title">¡Bienvenido a<br>Super despensa!</h1>
+                    <p class="welcome-subtitle">Selecciona un método de facturación</p>
+                    
+                    <div class="option-card" onclick="showCreditoFiscalModal()">
+                        <div class="option-image">
+                            <svg width="200" height="140" viewBox="0 0 200 140" fill="none">
+                                <rect x="30" y="30" width="140" height="80" rx="8" fill="#E2E8F0"/>
+                                <rect x="45" y="45" width="110" height="20" rx="4" fill="#CBD5E0"/>
+                                <rect x="45" y="75" width="50" height="25" rx="4" fill="#A0AEC0"/>
+                                <rect x="105" y="75" width="50" height="25" rx="4" fill="#A0AEC0"/>
+                            </svg>
+                        </div>
+                        <h3 class="option-title">Crédito fiscal</h3>
+                    </div>
+                    
+                    <div class="option-card" onclick="showFormScreen()">
+                        <div class="option-image">
+                            <svg width="200" height="140" viewBox="0 0 200 140" fill="none">
+                                <rect x="50" y="25" width="45" height="90" rx="6" fill="#E2E8F0"/>
+                                <rect x="58" y="35" width="29" height="40" rx="3" fill="#CBD5E0"/>
+                                <circle cx="72.5" cy="85" r="5" fill="#B8E986"/>
+                                <rect x="105" y="20" width="55" height="100" rx="6" fill="#E2E8F0"/>
+                                <rect x="113" y="30" width="39" height="60" rx="3" fill="#CBD5E0"/>
+                            </svg>
+                        </div>
+                        <h3 class="option-title">Factura electrónica</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: LO SENTIMOS -->
+    <div id="modal-credito" class="modal-overlay">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeCreditoModal()">×</button>
+            <h2 class="modal-title">¡Lo sentimos!</h2>
+            <p class="modal-text">"Lo sentimos, el self-checkout no permite emitir crédito fiscal. Por favor, dirígete a una caja atendida por personal".</p>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: FORMULARIO -->
+    <div id="screen-form" class="screen">
+        <div class="app-container">
+            <div class="left-side"></div>
+            <div class="right-side">
+                <div class="form-container">
+                    <div class="form-header">
+                        <h2 class="form-title">Ingresa tus datos de facturación</h2>
+                        <p class="form-subtitle">Recibirás tu factura en el correo electrónico ingresado</p>
+                    </div>
+                    
+                    <form onsubmit="submitForm(event)">
+                        <div class="input-group">
+                            <label class="input-label">Nombres</label>
+                            <input type="text" class="input-field" placeholder="Jose Andres" required>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label">Apellidos</label>
+                            <input type="text" class="input-field" placeholder="Galinas Hernández" required>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label">DUI</label>
+                            <input type="text" class="input-field" placeholder="00000000-0" required>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label">Correo electrónico</label>
+                            <input type="email" class="input-field" placeholder="joseanndres@gmail.com" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Continuar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 3: CHECKOUT -->
+    <div id="screen-checkout" class="screen">
+        <div class="checkout-layout">
+            <div class="checkout-left">
+                <h2 class="section-heading">Ingresa el código del producto</h2>
+                <input type="text" class="product-code-input" placeholder="ej. 1001" id="productCode" aria-label="Código de producto">
+                <button class="add-btn" id="addProductBtn" onclick="addProductByCode()">Agregar</button>
+
+                <div class="cart-box">
+                    <h3 class="cart-heading">Productos en el carrito</h3>
+                    <div id="cartItems">
+                        <!-- Items iniciales (puedes empezar vacío si prefieres) -->
+                        <div class="cart-item">
+                            <span class="item-name">Leche descremada</span>
+                            <div class="item-right">
+                                <span class="item-price">$3.00</span>
+                                <button class="delete-btn" onclick="removeItem(this)">🗑</button>
+                            </div>
+                        </div>
+                        <div class="cart-item">
+                            <span class="item-name">Manzana Fiji</span>
+                            <div class="item-right">
+                                <span class="item-price">$0.60</span>
+                                <button class="delete-btn" onclick="removeItem(this)">🗑</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checkout-right">
+                <h2 class="section-heading">Monto a pagar</h2>
+                
+                <div class="summary-box">
+                    <div class="summary-line">
+                        <span>Subtotal</span>
+                        <span id="subtotal">$0.00</span>
+                    </div>
+                    <div class="summary-line">
+                        <span>Descuentos</span>
+                        <span id="discount">-$0.00</span>
+                    </div>
+                    <div class="summary-line total">
+                        <span>Total de la compra</span>
+                        <span id="total">$0.00</span>
+                    </div>
+                </div>
+                
+                <div class="payment-box">
+                    <h3 class="payment-heading">Método de pago</h3>
+                    <button class="btn btn-primary" onclick="showEfectivoModal()">Efectivo</button>
+                    <button class="btn btn-secondary" onclick="showTarjetaModal()">Tarjeta</button>
+                    <button class="btn btn-danger" onclick="cancelarCompra()">Cancelar compra</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EFECTIVO -->
+    <div id="modal-efectivo" class="modal-overlay">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeEfectivoModal()">×</button>
+            <div class="modal-icon">
+                <svg viewBox="0 0 100 100" fill="none">
+                    <rect x="10" y="30" width="80" height="45" rx="6" stroke="#2D3748" stroke-width="3" fill="none"/>
+                    <circle cx="50" cy="52.5" r="12" stroke="#2D3748" stroke-width="3" fill="none"/>
+                    <circle cx="50" cy="52.5" r="6" stroke="#2D3748" stroke-width="2" fill="none"/>
+                    <rect x="15" y="35" width="15" height="8" rx="2" fill="#B8E986"/>
+                    <rect x="70" y="35" width="15" height="8" rx="2" fill="#B8E986"/>
+                </svg>
+            </div>
+            <h2 class="modal-title">Ingresa tu efectivo</h2>
+            <p class="modal-text">Por favor, inserta los billetes o monedas en la ranura indicada.</p>
+        </div>
+    </div>
+
+    <!-- MODAL: TARJETA -->
+    <div id="modal-tarjeta" class="modal-overlay">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeTarjetaModal()">×</button>
+            <div class="modal-icon">
+                <svg viewBox="0 0 100 100" fill="none">
+                    <rect x="15" y="25" width="70" height="50" rx="6" stroke="#2D3748" stroke-width="3" fill="none" transform="rotate(-12 50 50)"/>
+                    <line x1="15" y1="37" x2="85" y2="37" stroke="#2D3748" stroke-width="6" transform="rotate(-12 50 50)"/>
+                    <rect x="25" y="52" width="15" height="10" rx="2" fill="#FFD700" transform="rotate(-12 50 50)"/>
+                </svg>
+            </div>
+            <h2 class="modal-title">POS activado</h2>
+            <p class="modal-text">Por favor, acerca tu tarjeta al lector para completar el pago.</p>
+        </div>
+    </div>
+
+    <!-- MODAL: GRACIAS -->
+    <div id="modal-gracias" class="modal-overlay">
+        <div class="modal-box">
+            <button class="modal-close" onclick="resetApp()">×</button>
+            <div class="modal-icon pulse">
+                <svg viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="35" stroke="#7BC84A" stroke-width="4"/>
+                    <path d="M32 50 L44 62 L68 38" stroke="#7BC84A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <rect x="15" y="25" width="70" height="50" rx="6" stroke="#7BC84A" stroke-width="2" fill="none" transform="rotate(-12 50 30)" opacity="0.4"/>
+                </svg>
+            </div>
+            <h2 class="modal-title">Gracias por tu compra</h2>
+            <p class="modal-text">Tu transacción se ha completado exitosamente. ¡Que tengas un excelente día!</p>
+        </div>
+    </div>
+
+    <script>
+        // Mapeo de productos disponibles por código
+        const PRODUCTS = {
+            '1001': { name: 'Leche descremada', price: 3.00 },
+            '1002': { name: 'Manzana Fiji', price: 0.60 },
+            '1003': { name: 'Pepino Ingles', price: 0.80 },
+            '1004': { name: 'Tomate de ensalada', price: 0.70 },
+            '1005': { name: 'Yogurt natural 1 L', price: 2.90 },
+            '1006': { name: 'Bananas (1 lb)', price: 0.85 },
+            '1007': { name: 'Zanahoria (1 lb)', price: 0.75 },
+            '1008': { name: 'Cereal integral 300 g', price: 3.40 },
+            '1009': { name: 'Arroz blanco 2 lb', price: 2.25 },
+            '1010': { name: 'Frijoles rojos 2 lb', price: 2.40 },
+            '1011': { name: 'Aceite de oliva 500 ml', price: 5.90 },
+            '1012': { name: 'Galletas saladas 6 pack', price: 1.50 },
+            '1013': { name: 'Jugo de naranja 1 L', price: 2.20 },
+            '1014': { name: 'Papel higiénico (paquete de 4)', price: 2.10 },
+            '1015': { name: 'Detergente líquido 1 L', price: 4.80 },
+            '1016': { name: 'Queso cheddar 200 g', price: 3.75 }
+        };
+
+        // Funciones de navegación
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Pantalla de bienvenida
+        function showCreditoFiscalModal() {
+            document.getElementById('modal-credito').classList.add('show');
+        }
+
+        function closeCreditoModal() {
+            document.getElementById('modal-credito').classList.remove('show');
+        }
+
+        function showFormScreen() {
+            showScreen('screen-form');
+        }
+
+        // Formulario
+        function submitForm(e) {
+            e.preventDefault();
+            showScreen('screen-checkout');
+            updateTotals();
+            document.getElementById('productCode').focus();
+        }
+
+        // Añadir producto por código
+        function addProductByCode() {
+            const input = document.getElementById('productCode');
+            const raw = (input.value || '').trim();
+            if (!raw) return;
+
+            // Normalizar código: permitir entradas como "1001" o "1001-LECHE"
+            const code = raw.split(/[^0-9A-Za-z]/)[0].toUpperCase();
+            const product = PRODUCTS[code];
+
+            if (!product) {
+                alert('Código no encontrado: ' + raw);
+                input.value = '';
+                input.focus();
+                return;
+            }
+
+            addCartItem(product.name, product.price, code);
+            input.value = '';
+            input.focus();
+            updateTotals();
+        }
+
+        function addCartItem(name, price, code) {
+            const cart = document.getElementById('cartItems');
+            const item = document.createElement('div');
+            item.className = 'cart-item';
+            item.dataset.code = code;
+            item.innerHTML = `
+                <span class="item-name">${escapeHtml(name)}</span>
+                <div class="item-right">
+                    <span class="item-price">$${price.toFixed(2)}</span>
+                    <button class="delete-btn" onclick="removeItem(this)">🗑</button>
+                </div>
+            `;
+            cart.appendChild(item);
+        }
+
+        // Simple escape para texto que se inserta en innerHTML
+        function escapeHtml(text) {
+            return (text + '')
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;');
+        }
+
+        // Checkout
+        function removeItem(btn) {
+            btn.closest('.cart-item').remove();
+            updateTotals();
+        }
+
+        function updateTotals() {
+            const items = document.querySelectorAll('.cart-item');
+            let subtotal = 0;
+            items.forEach(item => {
+                const price = parseFloat((item.querySelector('.item-price') || {}).textContent?.replace('$', '')) || 0;
+                subtotal += price;
+            });
+            const discount = subtotal * 0.2;
+            const total = subtotal - discount;
+            document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('discount').textContent = '-$' + discount.toFixed(2);
+            document.getElementById('total').textContent = '$' + total.toFixed(2);
+        }
+
+        function cancelarCompra() {
+            if (confirm('¿Estás seguro de que deseas cancelar la compra?')) {
+                resetApp();
+            }
+        }
+
+        // Modales de pago
+        function showEfectivoModal() {
+            document.getElementById('modal-efectivo').classList.add('show');
+            setTimeout(() => {
+                closeEfectivoModal();
+                showGraciasModal();
+            }, 3000);
+        }
+
+        function closeEfectivoModal() {
+            document.getElementById('modal-efectivo').classList.remove('show');
+        }
+
+        function showTarjetaModal() {
+            document.getElementById('modal-tarjeta').classList.add('show');
+            setTimeout(() => {
+                closeTarjetaModal();
+                showGraciasModal();
+            }, 3000);
+        }
+
+        function closeTarjetaModal() {
+            document.getElementById('modal-tarjeta').classList.remove('show');
+        }
+
+        function showGraciasModal() {
+            document.getElementById('modal-gracias').classList.add('show');
+        }
+
+        function resetApp() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
+            showScreen('screen-welcome');
+            document.getElementById('cartItems').innerHTML = '';
+            updateTotals();
+        }
+
+        // Cerrar modales con ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
+            }
+        });
+
+        // Atajo Enter en input
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('productCode');
+            if (input) {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addProductByCode();
+                    }
+                });
+            }
+            // Inicializar totales con los items que haya
+            updateTotals();
+        });
+    </script>
+</body>
+</html>
