@@ -11,6 +11,7 @@
             box-sizing: border-box;
         }
 
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             overflow: hidden;
@@ -659,24 +660,68 @@
 
     <script>
         // Mapeo de productos disponibles por código
-        const PRODUCTS = {
-            '1001': { name: 'Leche descremada', price: 3.00 },
-            '1002': { name: 'Manzana Fiji', price: 0.60 },
-            '1003': { name: 'Pepino Ingles', price: 0.80 },
-            '1004': { name: 'Tomate de ensalada', price: 0.70 },
-            '1005': { name: 'Yogurt natural 1 L', price: 2.90 },
-            '1006': { name: 'Bananas (1 lb)', price: 0.85 },
-            '1007': { name: 'Zanahoria (1 lb)', price: 0.75 },
-            '1008': { name: 'Cereal integral 300 g', price: 3.40 },
-            '1009': { name: 'Arroz blanco 2 lb', price: 2.25 },
-            '1010': { name: 'Frijoles rojos 2 lb', price: 2.40 },
-            '1011': { name: 'Aceite de oliva 500 ml', price: 5.90 },
-            '1012': { name: 'Galletas saladas 6 pack', price: 1.50 },
-            '1013': { name: 'Jugo de naranja 1 L', price: 2.20 },
-            '1014': { name: 'Papel higiénico (paquete de 4)', price: 2.10 },
-            '1015': { name: 'Detergente líquido 1 L', price: 4.80 },
-            '1016': { name: 'Queso cheddar 200 g', price: 3.75 }
-        };
+        function fetchProductFromAPI(code) {
+    const api = {
+        1: { name: "Arroz Diana 5 lb", price: 4.50 },
+        2: { name: "Leche Entera 1 L", price: 1.20 },
+        3: { name: "Azúcar Morena 2 lb", price: 1.10 },
+        4: { name: "Sal Yodada 1 lb", price: 0.50 },
+        5: { name: "Frijoles Rojos 2 lb", price: 2.10 },
+        6: { name: "Aceite de Cocina 1 L", price: 3.40 },
+        7: { name: "Huevos Docena", price: 2.60 },
+        8: { name: "Pasta Espagueti 400 g", price: 1.15 },
+        9: { name: "Café Instantáneo 200 g", price: 3.90 },
+        10: { name: "Cereal Corn Flakes 300 g", price: 2.80 },
+
+        11: { name: "Pan Blanco 1 paquete", price: 1.35 },
+        12: { name: "Galletas Saladas", price: 1.10 },
+        13: { name: "Queso Cheddar 200 g", price: 3.75 },
+        14: { name: "Jamón de Pavo 250 g", price: 2.95 },
+        15: { name: "Mantequilla 90 g", price: 1.25 },
+        16: { name: "Yogurt Natural 1 L", price: 2.90 },
+        17: { name: "Gelatina Sabores 1 caja", price: 0.85 },
+        18: { name: "Avena en Hojuelas 500 g", price: 2.10 },
+        19: { name: "Salsa de Tomate 400 g", price: 1.40 },
+        20: { name: "Mayonesa 250 g", price: 1.50 },
+
+        21: { name: "Café Listo 400 g", price: 3.60 },
+        22: { name: "Refresco en Polvo", price: 0.65 },
+        23: { name: "Leche en Polvo 400 g", price: 4.20 },
+        24: { name: "Agua Embotellada 1 L", price: 0.50 },
+        25: { name: "Gaseosa 2 L", price: 1.80 },
+        26: { name: "Energética 473 ml", price: 2.00 },
+        27: { name: "Papas Fritas 150 g", price: 1.50 },
+        28: { name: "Chocolate Barra", price: 0.95 },
+        29: { name: "Caramelos Pack", price: 0.75 },
+        30: { name: "Galletas Rellenas", price: 1.25 },
+
+        31: { name: "Manzana Roja (lb)", price: 0.95 },
+        32: { name: "Banano (lb)", price: 0.70 },
+        33: { name: "Huevos 30 unidades", price: 4.90 },
+        34: { name: "Pollo Entero (lb)", price: 1.60 },
+        35: { name: "Carne de Res Molida (lb)", price: 3.90 },
+        36: { name: "Pescado Tilapia (lb)", price: 3.20 },
+        37: { name: "Tomate (lb)", price: 0.70 },
+        38: { name: "Pepino (unidad)", price: 0.50 },
+        39: { name: "Cebolla Blanca (lb)", price: 0.85 },
+        40: { name: "Zanahoria (lb)", price: 0.75 },
+
+        41: { name: "Detergente Líquido 1 L", price: 4.80 },
+        42: { name: "Suavizante 1 L", price: 3.20 },
+        43: { name: "Lavaplatos 500 ml", price: 1.10 },
+        44: { name: "Papel Higiénico (4 rollos)", price: 2.10 },
+        45: { name: "Toallas de Cocina", price: 1.40 },
+        46: { name: "Jabón de Barra 3 pack", price: 1.50 },
+        47: { name: "Shampoo 400 ml", price: 3.80 },
+        48: { name: "Desodorante Spray", price: 2.90 },
+        49: { name: "Crema Dental 120 g", price: 1.55 },
+        50: { name: "Cepillo Dental", price: 0.80 }
+    };
+
+    return api[code] || null;
+}
+
+
 
         // Funciones de navegación
         function showScreen(screenId) {
@@ -707,26 +752,28 @@
 
         // Añadir producto por código
         function addProductByCode() {
-            const input = document.getElementById('productCode');
-            const raw = (input.value || '').trim();
-            if (!raw) return;
+    const input = document.getElementById('productCode');
+    const code = input.value.trim();
 
-            // Normalizar código: permitir entradas como "1001" o "1001-LECHE"
-            const code = raw.split(/[^0-9A-Za-z]/)[0].toUpperCase();
-            const product = PRODUCTS[code];
+    const product = fetchProductFromAPI(code);
 
-            if (!product) {
-                alert('Código no encontrado: ' + raw);
-                input.value = '';
-                input.focus();
-                return;
-            }
+    if (!product) {
+        alert("Código no encontrado: " + code);
+        input.value = "";
+        return;
+    }
+
+    addCartItem(product.name, product.price, code);
+    input.value = "";
+    updateTotals();
+}
+
 
             addCartItem(product.name, product.price, code);
             input.value = '';
             input.focus();
             updateTotals();
-        }
+        
 
         function addCartItem(name, price, code) {
             const cart = document.getElementById('cartItems');
