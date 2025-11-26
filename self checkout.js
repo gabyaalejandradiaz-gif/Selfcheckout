@@ -1,72 +1,92 @@
-/* App JS separado en funciones */
+async function fetchProductFromAPI(code) {
+    try {
+        const res = await fetch(`https://dummyjson.com/products/${code}`);
 
-const PRODUCTS = {
-    '1001': { name: 'Leche descremada', price: 3.00 },
-    '1002': { name: 'Manzana Fiji', price: 0.60 },
-    '1003': { name: 'Pepino Ingles', price: 0.80 },
-    '1004': { name: 'Tomate de ensalada', price: 0.70 },
-    '1005': { name: 'Yogurt natural 1 L', price: 2.90 },
-    '1006': { name: 'Bananas (1 lb)', price: 0.85 },
-    '1007': { name: 'Zanahoria (1 lb)', price: 0.75 },
-    '1008': { name: 'Cereal integral 300 g', price: 3.40 },
-    '1009': { name: 'Arroz blanco 2 lb', price: 2.25 },
-    '1010': { name: 'Frijoles rojos 2 lb', price: 2.40 },
-    '1011': { name: 'Aceite de oliva 500 ml', price: 5.90 },
-    '1012': { name: 'Galletas saladas 6 pack', price: 1.50 },
-    '1013': { name: 'Jugo de naranja 1 L', price: 2.20 },
-    '1014': { name: 'Papel higiénico (paquete de 4)', price: 2.10 },
-    '1015': { name: 'Detergente líquido 1 L', price: 4.80 },
-    '1016': { name: 'Queso cheddar 200 g', price: 3.75 }
-};
+        if (!res.ok) return null;
 
-/* Navegación entre pantallas */
+        const data = await res.json();
+
+        return {
+            name: data.title,
+            price: data.price
+        };
+    } catch (err) {
+        return null;
+    }
+}
+
+
+/* ============================
+   NAVEGACIÓN ENTRE PANTALLAS
+=============================== */
+
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const el = document.getElementById(id);
     if (el) el.classList.add('active');
 }
 
-/* Modales */
+
+/* ============================
+   MODALES
+=============================== */
+
 function showModal(id) {
     const m = document.getElementById(id);
     if (m) m.classList.add('show');
 }
+
 function closeModal(id) {
     const m = document.getElementById(id);
     if (m) m.classList.remove('show');
 }
 
-/* Formulario */
+
+/* ============================
+   FORMULARIO
+=============================== */
+
 function handleFormSubmit(e) {
     e.preventDefault();
     showScreen('screen-checkout');
     document.getElementById('productCode').focus();
 }
 
-/* Carrito */
-function addProductByCode() {
-    const input = document.getElementById('productCode');
-    const raw = (input.value || '').trim();
-    if (!raw) return;
-    const code = raw.split(/[^0-9]/)[0];
-    const product = PRODUCTS[code];
+
+/* ============================
+   AGREGAR PRODUCTO (API)
+=============================== */
+
+async function addProductByCode() {
+    const code = document.getElementById("productCode").value.trim();
+
+    if (!code) return;
+
+    const product = await fetchProductFromAPI(code);
+
     if (!product) {
-        alert('Código no encontrado: ' + raw);
-        input.value = '';
-        input.focus();
+        alert("Código no válido o producto no encontrado.");
         return;
     }
+
     addCartItem(product.name, product.price, code);
-    input.value = '';
-    input.focus();
+
+    document.getElementById("productCode").value = "";
+
     updateTotals();
 }
+
+
+/* ============================
+   UI: CREAR ITEM EN CARRITO
+=============================== */
 
 function addCartItem(name, price, code) {
     const cart = document.getElementById('cartItems');
     const item = document.createElement('div');
     item.className = 'cart-item';
-    item.dataset.code = code || '';
+    item.dataset.code = code;
+
     item.innerHTML = `
         <div class="item-left">
             <div class="item-name">${escapeHtml(name)}</div>
@@ -76,10 +96,15 @@ function addCartItem(name, price, code) {
             <button class="delete-btn" type="button" aria-label="Eliminar">🗑</button>
         </div>
     `;
+
     cart.appendChild(item);
 }
 
-/* Escapar texto para innerHTML */
+
+/* ============================
+   ESCAPE HTML
+=============================== */
+
 function escapeHtml(text) {
     return String(text)
         .replace(/&/g,'&amp;')
@@ -89,7 +114,11 @@ function escapeHtml(text) {
         .replace(/'/g,'&#039;');
 }
 
-/* Delegation para eliminar y otras acciones */
+
+/* ============================
+   ELIMINAR ITEMS (delegation)
+=============================== */
+
 function cartClickHandler(e) {
     const btn = e.target.closest('.delete-btn');
     if (btn) {
@@ -99,26 +128,38 @@ function cartClickHandler(e) {
     }
 }
 
-/* Totales */
+
+/* ============================
+   TOTALES
+=============================== */
+
 function updateTotals() {
     const items = document.querySelectorAll('.cart-item');
     let subtotal = 0;
+
     items.forEach(i => {
         const pEl = i.querySelector('.item-price');
         const price = pEl ? parseFloat(pEl.textContent.replace('$','')) || 0 : 0;
         subtotal += price;
     });
-    const discount = subtotal * 0.2;
+
+    const discount = subtotal * 0.20;
     const total = subtotal - discount;
+
     document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
     document.getElementById('discount').textContent = '-$' + discount.toFixed(2);
     document.getElementById('total').textContent = '$' + total.toFixed(2);
 }
 
-/* Cancelar / reset */
+
+/* ============================
+   CANCELAR / RESET
+=============================== */
+
 function cancelarCompra() {
     if (confirm('¿Estás seguro de que deseas cancelar la compra?')) resetApp();
 }
+
 function resetApp() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
     document.getElementById('cartItems').innerHTML = '';
@@ -126,7 +167,11 @@ function resetApp() {
     showScreen('screen-welcome');
 }
 
-/* Pagos (simulados) */
+
+/* ============================
+   PAGOS (SIMULADOS)
+=============================== */
+
 function handleEfectivo() {
     showModal('modal-efectivo');
     setTimeout(() => {
@@ -134,6 +179,7 @@ function handleEfectivo() {
         showModal('modal-gracias');
     }, 2000);
 }
+
 function handleTarjeta() {
     showModal('modal-tarjeta');
     setTimeout(() => {
@@ -142,24 +188,46 @@ function handleTarjeta() {
     }, 2000);
 }
 
-/* Eventos globales */
+
+/* ============================
+   BIND UI
+=============================== */
+
 function bindUI() {
-    document.getElementById('btnCredito').addEventListener('click', () => showModal('modal-credito'));
-    document.getElementById('btnFactura').addEventListener('click', () => showScreen('screen-form'));
-    document.getElementById('billingForm').addEventListener('submit', handleFormSubmit);
+    const btnCredito = document.getElementById('btnCredito');
+    const btnFactura = document.getElementById('btnFactura');
 
-    document.getElementById('addProductBtn').addEventListener('click', addProductByCode);
-    document.getElementById('productCode').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); addProductByCode(); }
-    });
+    if (btnCredito) btnCredito.addEventListener('click', () => showModal('modal-credito'));
+    if (btnFactura) btnFactura.addEventListener('click', () => showScreen('screen-form'));
 
-    document.getElementById('cartItems').addEventListener('click', cartClickHandler);
+    const billingForm = document.getElementById('billingForm');
+    if (billingForm) billingForm.addEventListener('submit', handleFormSubmit);
 
-    document.getElementById('btnEfectivo').addEventListener('click', handleEfectivo);
-    document.getElementById('btnTarjeta').addEventListener('click', handleTarjeta);
-    document.getElementById('btnCancelar').addEventListener('click', cancelarCompra);
+    const addBtn = document.getElementById('addProductBtn');
+    if (addBtn) addBtn.addEventListener('click', addProductByCode);
 
-    // Cerrar modales con botones que usan data-target
+    const codeInput = document.getElementById('productCode');
+    if (codeInput) {
+        codeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addProductByCode();
+            }
+        });
+    }
+
+    const cart = document.getElementById('cartItems');
+    if (cart) cart.addEventListener('click', cartClickHandler);
+
+    const btnEfectivo = document.getElementById('btnEfectivo');
+    if (btnEfectivo) btnEfectivo.addEventListener('click', handleEfectivo);
+
+    const btnTarjeta = document.getElementById('btnTarjeta');
+    if (btnTarjeta) btnTarjeta.addEventListener('click', handleTarjeta);
+
+    const btnCancelar = document.getElementById('btnCancelar');
+    if (btnCancelar) btnCancelar.addEventListener('click', cancelarCompra);
+
     document.querySelectorAll('.modal-close').forEach(btn => {
         btn.addEventListener('click', () => {
             const t = btn.dataset.target;
@@ -168,11 +236,17 @@ function bindUI() {
         });
     });
 
-    // ESC cierra modales
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show')); });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape')
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
+    });
 }
 
-/* Inicialización */
+
+/* ============================
+   INICIO
+=============================== */
+
 document.addEventListener('DOMContentLoaded', () => {
     bindUI();
     updateTotals();
